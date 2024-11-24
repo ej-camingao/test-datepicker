@@ -2,28 +2,56 @@ import React, { useEffect, useRef } from 'react';
 import flatpickr from 'flatpickr';
 import 'flatpickr/dist/flatpickr.css';
 
-const DatePicker = () => {
+const DatePicker = ({ 
+  value, 
+  onChange, 
+  placeholder = 'Select date...', 
+  options = {} 
+}) => {
   const inputRef = useRef(null);
+  const flatpickrInstance = useRef(null);
 
   useEffect(() => {
-    const picker = flatpickr(inputRef.current, {
+    // Initialize Flatpickr
+    flatpickrInstance.current = flatpickr(inputRef.current, {
+      // Default options
       dateFormat: 'Y-m-d',
+      allowInput: true,
+      clickOpens: true,
+      defaultValue: value,
+      // Handle date change
+      onChange: (selectedDates, dateStr) => {
+        if (onChange) {
+          onChange(selectedDates[0], dateStr);
+        }
+      },
+      // Merge with custom options
+      ...options
     });
 
+    // Cleanup on component unmount
     return () => {
-      picker.destroy();
+      if (flatpickrInstance.current) {
+        flatpickrInstance.current.destroy();
+      }
     };
-  }, []);
+  }, []); // Empty dependency array
+
+  // Update value from props
+  useEffect(() => {
+    if (flatpickrInstance.current && value) {
+      flatpickrInstance.current.setDate(value, false);
+    }
+  }, [value]);
 
   return (
-    <div>
-      <input 
-        ref={inputRef} 
-        type="text" 
-        placeholder="Select date..." 
-        style={{ padding: '8px', border: '1px solid #ccc' }}
-      />
-    </div>
+    <input
+      ref={inputRef}
+      type="text"
+      placeholder={placeholder}
+      className="w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+      data-input
+    />
   );
 };
 
